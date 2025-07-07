@@ -66,5 +66,52 @@ void rechercherClient(Client *clients, int nombreClients, int nomClient) {
 }
 
 
+typedef struct {
+    Date date;                // Date de l'opération
+    int numeroCompte;         // Numéro du compte concerné
+    char type[10];            // "versement" ou "retrait"
+    float montant;            // Montant de l'opération
+    float nouveauSolde;       // Nouveau solde après l'opération
+} OperationJournal;
+
+void afficherHistoriqueOperations(int numeroCompte, const char* pin, const char* pinCorrecte, Client proprietaire) {
+    // Vérification du code PIN (ou admin)
+    if (strcmp(pin, pinCorrecte) != 0 && strcmp(pin, "admin") != 0) {
+        printf("Code PIN incorrect. Accès refusé.\n");
+        return;
+    }
+
+    FILE *f = fopen("journal.txt", "r");
+    if (!f) {
+        printf("Impossible d'ouvrir le fichier journal.txt\n");
+        return;
+    }
+
+    OperationJournal op;
+    int trouve = 0;
+
+    // En-tête
+    printf("\n=== HISTORIQUE DU COMPTE %d ===\n", numeroCompte);
+    printf("Titulaire : %s %s\n\n", proprietaire.prenom, proprietaire.nom);
+    printf("Date       | Type      | Montant     | Nouveau Solde\n");
+    printf("------------------------------------------------------\n");
+
+    // Lecture ligne par ligne
+    while (fread(&op, sizeof(OperationJournal), 1, f)) {
+        if (op.numeroCompte == numeroCompte) {
+            printf("%02d/%02d/%d | %-9s | %10.2f | %14.2f\n",
+                   op.date.jour, op.date.mois, op.date.annee,
+                   op.type, op.montant, op.nouveauSolde);
+            trouve = 1;
+        }
+    }
+
+    if (!trouve) {
+        printf("Aucune opération trouvée pour ce compte.\n");
+    }
+
+    fclose(f);
+}
+
 
 
